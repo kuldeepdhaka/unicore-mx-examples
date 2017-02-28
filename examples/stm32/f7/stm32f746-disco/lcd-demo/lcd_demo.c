@@ -1,7 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <unicore-mx/stm32/rcc.h>
 #include <unicore-mx/stm32/gpio.h>
-#include <unicore-mx/stm32/ltdc.h>
+#include <unicore-mx/lcd_tft/lcd_tft.h>
 #include "RGB_565_480_272.h"
 #include "rk043fn48h.h"
 
@@ -9,7 +9,7 @@
 static void lcd_config(void);
 static void lcd_pinmux(void);
 static void lcd_clock(void);
-static void lcd_config_layer(void);
+static void lcd_config_layer(lcd_tft *lt);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -71,36 +71,23 @@ void lcd_pinmux(void)
     gpio_set(GPIOK, GPIO3);
 }
 
-static void lcd_config_layer(void)
+static void lcd_config_layer(lcd_tft *lt)
 {
-  /* Windowing configuration */
-  ltdc_setup_windowing(LTDC_LAYER_2, 480, 272);
+	const struct lcd_tft_layer layer = {
+		.framebuffer = {
+			.x = 0,
+			.y = 0,
+			.width = RGB_565_480_272.width,
+			.height = RGB_565_480_272.height,
+			.format = LCD_TFT_RGB565,
+			.data = RGB_565_480_272.pixel_data
+		},
 
-  /* Specifies the pixel format */
-  ltdc_set_pixel_format(LTDC_LAYER_2, LTDC_LxPFCR_RGB565);
+		.palette = {.data = NULL, .count = 0},
+		.transparent = {.data = NULL, .count = 0}
+	};
 
-  /* Default color values */
-  ltdc_set_default_colors(LTDC_LAYER_2, 0, 0, 0, 0);
-  /* Constant alpha */
-  ltdc_set_constant_alpha(LTDC_LAYER_2, 255);
-
-  /* Blending factors */
-  ltdc_set_blending_factors(LTDC_LAYER_2, LTDC_LxBFCR_BF1_CONST_ALPHA, LTDC_LxBFCR_BF2_CONST_ALPHA);
-
-  /* Framebuffer address */
-  ltdc_set_fbuffer_address(LTDC_LAYER_2, (uint32_t)&RGB_565_480_272.pixel_data);
-
-  /* Configures the color frame buffer pitch in byte */
-  ltdc_set_fb_line_length(LTDC_LAYER_2, 2*480, 2*480); /* RGB565 is 2 bytes/pixel */
-
-  /* Configures the frame buffer line number */
-  ltdc_set_fb_line_count(LTDC_LAYER_2, 272);
-
-  /* Enable layer 1 */
-  ltdc_layer_ctrl_enable(LTDC_LAYER_2, LTDC_LxCR_LAYER_ENABLE);
-
-  /* Sets the Reload type */
-  ltdc_reload(LTDC_SRCR_IMR);
+	lcd_tft_layer_set(lt, 1, &layer);
 }
 
 /**
@@ -116,24 +103,29 @@ static void lcd_config_layer(void)
   */
 static void lcd_config(void)
 {
-  /* LTDC Initialization */
-  ltdc_ctrl_disable(LTDC_GCR_HSPOL_ACTIVE_HIGH); /* Active Low Horizontal Sync */
-  ltdc_ctrl_disable(LTDC_GCR_VSPOL_ACTIVE_HIGH); /* Active Low Vertical Sync */
-  ltdc_ctrl_disable(LTDC_GCR_DEPOL_ACTIVE_HIGH); /* Active Low Date Enable */
-  ltdc_ctrl_disable(LTDC_GCR_PCPOL_ACTIVE_HIGH); /* Active Low Pixel Clock */
+	const struct lcd_tft_config config = {
+		.timing = {
+			.hsync = RK043FN48H_HSYNC,
+			.vsync = RK043FN48H_VSYNC,
+			.hbp = RK043FN48H_HBP,
+			.vbp = RK043FN48H_VBP,
+			.height = RK043FN48H_HEIGHT,
+			.width = RK043FN48H_WIDTH,
+			.vfp = RK043FN48H_VFP,
+			.hfp = RK043FN48H_HFP
+		},
+		.features = LCD_TFT_HSYNC_ACTIVE_LOW |
+					LCD_TFT_VSYNC_ACTIVE_LOW |
+					LCD_TFT_DE_ACTIVE_LOW |
+					LCD_TFT_CLK_ACTIVE_LOW,
+		.output = LCD_TFT_OUTPUT_RGB888,
+		.background = 0x00000000
+	};
 
-  /* Configure the LTDC */
-  ltdc_set_tft_sync_timings(RK043FN48H_HSYNC, RK043FN48H_VSYNC,
-			                RK043FN48H_HBP,   RK043FN48H_VBP,
-			                RK043FN48H_WIDTH, RK043FN48H_HEIGHT,
-			                RK043FN48H_HFP,   RK043FN48H_VFP);
+	lcd_tft *lt = lcd_tft_init(LCD_TFT_STM32_LTDC, &config);
 
-  ltdc_set_background_color(0, 0, 0);
-  ltdc_ctrl_enable(LTDC_GCR_LTDC_ENABLE);
-
-  /* Configure the Layer*/
-  lcd_config_layer();
-
+	/* Configure the Layer*/
+	lcd_config_layer(lt);
 }
 
 
