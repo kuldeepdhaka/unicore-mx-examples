@@ -2,7 +2,6 @@
 ## This file is part of the unicore-mx project.
 ##
 ## Copyright (C) 2009 Uwe Hermann <uwe@hermann-uwe.de>
-## Copyright (C) 2010 Piotr Esden-Tempski <piotr@esden.net>
 ##
 ## This library is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
@@ -18,27 +17,13 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-LIBNAME		= ucmx_stm32l4
-DEFS		+= -DSTM32L4
+BINARY = cdcacm
 
-FP_FLAGS	?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
-ARCH_FLAGS	= -mthumb -mcpu=cortex-m4 $(FP_FLAGS)
+VPATH += $(COMMON_DIR)/usb_cdcacm
+CPPFLAGS += -I$(COMMON_DIR)/usb_cdcacm
+OBJS = cdcacm-target.o
 
-################################################################################
-# OpenOCD specific variables
+LDSCRIPT = ../nucleo-l432kc.ld
 
-OOCD		?= openocd
-OOCD_INTERFACE	?= stlink-v2-1
-OOCD_BOARD	?= stm32l4discovery
+include ../../Makefile.include
 
-################################################################################
-# Black Magic Probe specific variables
-# Set the BMP_PORT to a serial port and then BMP is used for flashing
-BMP_PORT	?=
-
-################################################################################
-# texane/stlink specific variables
-#STLINK_PORT	?= :4242
-
-
-include ../../../Makefile.include
