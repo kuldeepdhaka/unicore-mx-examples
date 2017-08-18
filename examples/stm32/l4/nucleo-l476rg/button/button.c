@@ -28,7 +28,9 @@ uint16_t exti_line_state;
 /* Set STM32 to 48 MHz. */
 static void clock_setup(void)
 {
-	rcc_clock_setup_pll(&rcc_clock_config[RCC_CLOCK_VRANGE1_HSI16_PLL_48MHZ]);
+	/* FIXME: This code is outdated and has been commented out so that
+	 * the example compiles without error. */
+	/* rcc_clock_setup_pll(&rcc_clock_config[RCC_CLOCK_VRANGE1_HSI16_PLL_48MHZ]); */
 }
 
 static void gpio_setup(void)
