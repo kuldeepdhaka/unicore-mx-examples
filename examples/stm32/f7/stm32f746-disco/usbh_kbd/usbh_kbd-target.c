@@ -55,14 +55,6 @@ static void ulpi_pins(uint32_t gpioport, uint16_t gpiopins)
 
 static void gpio_setup(void)
 {
-	/* Set GPIO12-15 (in GPIO port D) to 'output push-pull'. */
-	gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT,
-			GPIO_PUPD_NONE, GPIO12 | GPIO13 | GPIO14 | GPIO15);
-
-	/* Set */
-	gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0);
-	gpio_clear(GPIOC, GPIO0);
-
 #if defined(USE_OTG_HS)
 	/* OTG_HS */
 	/* ULPI   GPIO
@@ -87,8 +79,10 @@ static void gpio_setup(void)
 	/* OTG_FS */
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+
+	/* FS Power control IC - Enable */
 	gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5);
-    gpio_clear(GPIOD, GPIO5);
+	gpio_clear(GPIOD, GPIO5);
 #endif
 
 	/* USART TX */
